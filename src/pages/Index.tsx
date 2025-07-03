@@ -1,10 +1,11 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { User, Ruler, Save, TrendingUp } from "lucide-react";
+import { User, Ruler, Save, TrendingUp, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -25,6 +26,15 @@ const Index = () => {
       medCoscia: "",
       ginocchio: "",
       caviglia: ""
+    },
+    bodyComposition: {
+      fat: "",
+      ffm: "",
+      tbw: "",
+      ecw: "",
+      icw: "",
+      bcm: "",
+      metabolismoBasale: ""
     }
   });
 
@@ -36,7 +46,9 @@ const Index = () => {
       vita: 85,
       fianchi: 98,
       braccio: 32,
-      coscia: 58
+      coscia: 58,
+      fat: 25.2,
+      ffm: 58.3
     },
     {
       date: "Feb 2024",
@@ -44,7 +56,9 @@ const Index = () => {
       vita: 83,
       fianchi: 96,
       braccio: 33,
-      coscia: 57
+      coscia: 57,
+      fat: 24.1,
+      ffm: 59.1
     },
     {
       date: "Mar 2024",
@@ -52,7 +66,9 @@ const Index = () => {
       vita: 81,
       fianchi: 94,
       braccio: 34,
-      coscia: 56
+      coscia: 56,
+      fat: 22.8,
+      ffm: 60.2
     },
     {
       date: "Apr 2024",
@@ -60,7 +76,9 @@ const Index = () => {
       vita: 79,
       fianchi: 92,
       braccio: 35,
-      coscia: 55
+      coscia: 55,
+      fat: 21.5,
+      ffm: 61.5
     },
     {
       date: "Mag 2024",
@@ -68,7 +86,9 @@ const Index = () => {
       vita: 77,
       fianchi: 90,
       braccio: 36,
-      coscia: 54
+      coscia: 54,
+      fat: 20.2,
+      ffm: 62.8
     }
   ];
 
@@ -89,6 +109,16 @@ const Index = () => {
     }));
   };
 
+  const handleBodyCompositionChange = (parameter: string, value: string) => {
+    setPatientData(prev => ({
+      ...prev,
+      bodyComposition: {
+        ...prev.bodyComposition,
+        [parameter]: value
+      }
+    }));
+  };
+
   const handleSave = () => {
     // Validazione base
     if (!patientData.name || !patientData.surname) {
@@ -97,7 +127,7 @@ const Index = () => {
     }
     
     console.log("Dati paziente salvati:", patientData);
-    toast.success("Dati paziente salvati con successo!");
+    toast.success("Report paziente salvato con successo!");
   };
 
   const measurementFields = [
@@ -113,31 +143,45 @@ const Index = () => {
     { key: "caviglia", label: "Caviglia (cm)" }
   ];
 
+  const bodyCompositionFields = [
+    { key: "fat", label: "FAT - Massa Grassa (%)" },
+    { key: "ffm", label: "FFM - Massa Magra (kg)" },
+    { key: "tbw", label: "TBW - Acqua Totale (L)" },
+    { key: "ecw", label: "ECW - Acqua Extracell. (L)" },
+    { key: "icw", label: "ICW - Acqua Intracell. (L)" },
+    { key: "bcm", label: "BCM - Massa Cell. (kg)" },
+    { key: "metabolismoBasale", label: "Metabolismo Basale (kcal)" }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header con Logo */}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              {/* Placeholder per il logo - sostituire con il logo reale */}
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Ruler className="w-8 h-8 text-white" />
+              <div className="w-20 h-20 rounded-lg overflow-hidden shadow-md">
+                <img 
+                  src="/lovable-uploads/42f3e8c5-7475-444a-a610-8687200353ab.png" 
+                  alt="Dott.ssa Anna Cosentino - Biologa Nutrizionista" 
+                  className="w-full h-full object-contain bg-white"
+                />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-800">Sistema Misure Paziente</h1>
-                <p className="text-gray-600">Gestione professionale delle misurazioni e progressi</p>
+                <h1 className="text-3xl font-bold text-gray-800">Report Nutrizionale Completo</h1>
+                <p className="text-gray-600">Dott.ssa Anna Cosentino - Biologa Nutrizionista</p>
+                <p className="text-sm text-gray-500">Sistema professionale per analisi antropometrica e composizione corporea</p>
               </div>
             </div>
             <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
               <Save className="w-4 h-4 mr-2" />
-              Salva Dati
+              Salva Report
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Colonna Sinistra - Dati Anagrafici e Misure */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Colonna Sinistra - Dati Anagrafici */}
           <div className="space-y-6">
             {/* Dati Anagrafici */}
             <Card className="shadow-lg border-0">
@@ -148,7 +192,7 @@ const Index = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-sm font-medium text-gray-700">Nome *</Label>
                     <Input
@@ -176,7 +220,7 @@ const Index = () => {
                     <Input
                       id="phone"
                       type="tel"
-                      placeholder="Inserisci il numero di telefono"
+                      placeholder="Inserisci il numero"
                       value={patientData.phone}
                       onChange={(e) => handleInputChange("phone", e.target.value)}
                       className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
@@ -197,16 +241,16 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Sezione Misure */}
+            {/* Misure Antropometriche */}
             <Card className="shadow-lg border-0">
               <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center">
                   <Ruler className="w-5 h-5 mr-2" />
-                  Composizione Corporea
+                  Misure Antropometriche
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   {measurementFields.map((field) => (
                     <div key={field.key} className="space-y-2">
                       <Label htmlFor={field.key} className="text-sm font-medium text-gray-700">
@@ -224,6 +268,38 @@ const Index = () => {
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Colonna Centrale - Composizione Corporea */}
+          <div className="space-y-6">
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center">
+                  <Activity className="w-5 h-5 mr-2" />
+                  Composizione Corporea
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {bodyCompositionFields.map((field) => (
+                    <div key={field.key} className="space-y-2">
+                      <Label htmlFor={field.key} className="text-sm font-medium text-gray-700">
+                        {field.label}
+                      </Label>
+                      <Input
+                        id={field.key}
+                        type="number"
+                        step="0.1"
+                        placeholder="0.0"
+                        value={patientData.bodyComposition[field.key as keyof typeof patientData.bodyComposition]}
+                        onChange={(e) => handleBodyCompositionChange(field.key, e.target.value)}
+                        className="border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+                  ))}
+                </div>
                 
                 <Separator className="my-6" />
                 
@@ -231,11 +307,46 @@ const Index = () => {
                   <Button 
                     onClick={handleSave} 
                     size="lg"
-                    className="bg-green-600 hover:bg-green-700 px-8"
+                    className="bg-orange-600 hover:bg-orange-700 px-8"
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    Salva Tutte le Misure
+                    Salva Composizione
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Riepilogo Parametri Chiave */}
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-t-lg">
+                <CardTitle className="text-sm">Riepilogo Parametri Chiave</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="p-3 bg-red-50 rounded-lg text-center">
+                    <p className="text-xs text-gray-600">Massa Grassa</p>
+                    <p className="text-lg font-bold text-red-600">
+                      {patientData.bodyComposition.fat || "0.0"}%
+                    </p>
+                  </div>
+                  <div className="p-3 bg-blue-50 rounded-lg text-center">
+                    <p className="text-xs text-gray-600">Massa Magra</p>
+                    <p className="text-lg font-bold text-blue-600">
+                      {patientData.bodyComposition.ffm || "0.0"} kg
+                    </p>
+                  </div>
+                  <div className="p-3 bg-cyan-50 rounded-lg text-center">
+                    <p className="text-xs text-gray-600">Acqua Totale</p>
+                    <p className="text-lg font-bold text-cyan-600">
+                      {patientData.bodyComposition.tbw || "0.0"} L
+                    </p>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded-lg text-center">
+                    <p className="text-xs text-gray-600">Metabolismo</p>
+                    <p className="text-lg font-bold text-green-600">
+                      {patientData.bodyComposition.metabolismoBasale || "0"} kcal
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -247,11 +358,11 @@ const Index = () => {
               <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center">
                   <TrendingUp className="w-5 h-5 mr-2" />
-                  Progressi Paziente
+                  Progressi nel Tempo
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="h-96">
+                <div className="h-80 mb-6">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={progressData}
@@ -283,24 +394,17 @@ const Index = () => {
                       />
                       <Line 
                         type="monotone" 
-                        dataKey="fianchi" 
-                        stroke="#f59e0b" 
-                        strokeWidth={2}
-                        name="Fianchi (cm)"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="braccio" 
+                        dataKey="fat" 
                         stroke="#ef4444" 
                         strokeWidth={2}
-                        name="Braccio (cm)"
+                        name="Massa Grassa (%)"
                       />
                       <Line 
                         type="monotone" 
-                        dataKey="coscia" 
+                        dataKey="ffm" 
                         stroke="#8b5cf6" 
                         strokeWidth={2}
-                        name="Coscia (cm)"
+                        name="Massa Magra (kg)"
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -308,36 +412,26 @@ const Index = () => {
                 
                 <Separator className="my-4" />
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
+                <div className="grid grid-cols-1 gap-3 text-center">
                   <div className="p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Petto</p>
+                    <p className="text-sm text-gray-600">Circonferenza Vita</p>
                     <p className="text-lg font-bold text-blue-600">-8 cm</p>
                     <p className="text-xs text-green-600">↓ Miglioramento</p>
                   </div>
-                  <div className="p-3 bg-green-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Vita</p>
-                    <p className="text-lg font-bold text-green-600">-8 cm</p>
-                    <p className="text-xs text-green-600">↓ Miglioramento</p>
-                  </div>
-                  <div className="p-3 bg-amber-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Fianchi</p>
-                    <p className="text-lg font-bold text-amber-600">-8 cm</p>
-                    <p className="text-xs text-green-600">↓ Miglioramento</p>
-                  </div>
                   <div className="p-3 bg-red-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Braccio</p>
-                    <p className="text-lg font-bold text-red-600">+4 cm</p>
-                    <p className="text-xs text-green-600">↑ Crescita muscolare</p>
+                    <p className="text-sm text-gray-600">Massa Grassa</p>
+                    <p className="text-lg font-bold text-red-600">-5.0%</p>
+                    <p className="text-xs text-green-600">↓ Riduzione</p>
                   </div>
                   <div className="p-3 bg-purple-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Coscia</p>
-                    <p className="text-lg font-bold text-purple-600">-4 cm</p>
-                    <p className="text-xs text-green-600">↓ Miglioramento</p>
+                    <p className="text-sm text-gray-600">Massa Magra</p>
+                    <p className="text-lg font-bold text-purple-600">+4.5 kg</p>
+                    <p className="text-xs text-green-600">↑ Aumento</p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Totale</p>
+                    <p className="text-sm text-gray-600">Periodo</p>
                     <p className="text-lg font-bold text-gray-800">5 mesi</p>
-                    <p className="text-xs text-blue-600">Periodo monitoraggio</p>
+                    <p className="text-xs text-blue-600">Monitoraggio</p>
                   </div>
                 </div>
               </CardContent>
@@ -347,7 +441,8 @@ const Index = () => {
 
         {/* Footer */}
         <div className="text-center text-gray-500 text-sm">
-          Sistema professionale per la gestione delle misure e progressi dei pazienti
+          <p>Report generato dal Sistema Professionale di Analisi Nutrizionale</p>
+          <p className="font-medium">Dott.ssa Anna Cosentino - Biologa Nutrizionista</p>
         </div>
       </div>
     </div>
