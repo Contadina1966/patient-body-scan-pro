@@ -1,13 +1,13 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { User, Ruler, Save, TrendingUp, Activity } from "lucide-react";
+import { User, Ruler, Save, TrendingUp, Activity, Calculator } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { calculateBodyComposition, BodyCompositionResults } from "@/utils/bodyCompositionCalculator";
 
 const Index = () => {
   const [patientData, setPatientData] = useState({
@@ -15,6 +15,8 @@ const Index = () => {
     surname: "",
     phone: "",
     email: "",
+    bodyWeight: "", // Nuovo campo per peso corporeo
+    fatPercentage: "", // Nuovo campo per percentuale massa grassa
     measurements: {
       braccio: "",
       polso: "",
@@ -34,9 +36,46 @@ const Index = () => {
       ecw: "",
       icw: "",
       bcm: "",
+      ecm: "", // Nuovo campo ECM
       metabolismoBasale: ""
     }
   });
+
+  const [calculatedResults, setCalculatedResults] = useState<BodyCompositionResults | null>(null);
+
+  // Calcolo automatico quando cambiano peso e percentuale grassa
+  useEffect(() => {
+    if (patientData.bodyWeight && patientData.fatPercentage) {
+      const bodyWeight = parseFloat(patientData.bodyWeight);
+      const fatPercentage = parseFloat(patientData.fatPercentage);
+      
+      if (bodyWeight > 0 && fatPercentage >= 0 && fatPercentage <= 100) {
+        try {
+          const results = calculateBodyComposition({ bodyWeight, fatPercentage });
+          setCalculatedResults(results);
+          
+          // Aggiorna automaticamente i campi calcolati
+          setPatientData(prev => ({
+            ...prev,
+            bodyComposition: {
+              ...prev.bodyComposition,
+              fat: fatPercentage.toString(),
+              ffm: results.ffm.toString(),
+              tbw: results.tbw.toString(),
+              ecw: results.ecw.toString(),
+              icw: results.icw.toString(),
+              bcm: results.bcm.toString(),
+              ecm: results.ecm.toString(),
+              metabolismoBasale: results.bmr.toString()
+            }
+          }));
+        } catch (error) {
+          console.error('Errore nel calcolo:', error);
+          toast.error("Errore nel calcolo dei parametri");
+        }
+      }
+    }
+  }, [patientData.bodyWeight, patientData.fatPercentage]);
 
   // Dati di esempio per il grafico dei progressi
   const progressData = [
@@ -127,6 +166,7 @@ const Index = () => {
     }
     
     console.log("Dati paziente salvati:", patientData);
+    console.log("Risultati calcolati:", calculatedResults);
     toast.success("Report paziente salvato con successo!");
   };
 
@@ -144,13 +184,13 @@ const Index = () => {
   ];
 
   const bodyCompositionFields = [
-    { key: "fat", label: "FAT - Massa Grassa (%)" },
-    { key: "ffm", label: "FFM - Massa Magra (kg)" },
-    { key: "tbw", label: "TBW - Acqua Totale (L)" },
-    { key: "ecw", label: "ECW - Acqua Extracell. (L)" },
-    { key: "icw", label: "ICW - Acqua Intracell. (L)" },
-    { key: "bcm", label: "BCM - Massa Cell. (kg)" },
-    { key: "metabolismoBasale", label: "Metabolismo Basale (kcal)" }
+    { key: "ffm", label: "FFM - Massa Magra (kg)", calculated: true },
+    { key: "tbw", label: "TBW - Acqua Totale (L)", calculated: true },
+    { key: "ecw", label: "ECW - Acqua Extracell. (L)", calculated: true },
+    { key: "icw", label: "ICW - Acqua Intracell. (L)", calculated: true },
+    { key: "bcm", label: "BCM - Massa Cellulare (kg)", calculated: true },
+    { key: "ecm", label: "ECM - Massa Extracell. (kg)", calculated: true },
+    { key: "metabolismoBasale", label: "Metabolismo Basale (kcal)", calculated: true }
   ];
 
   return (
@@ -241,6 +281,49 @@ const Index = () => {
               </CardContent>
             </Card>
 
+            {/* Calcolo Automatico */}
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-purple-500 to-violet-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center">
+                  <Calculator className="w-5 h-5 mr-2" />
+                  Calcolo Automatico
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bodyWeight" className="text-sm font-medium text-gray-700">Peso Corporeo (kg) *</Label>
+                    <Input
+                      id="bodyWeight"
+                      type="number"
+                      step="0.1"
+                      placeholder="0.0"
+                      value={patientData.bodyWeight}
+                      onChange={(e) => handleInputChange("bodyWeight", e.target.value)}
+                      className="border-gray-300 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="fatPercentage" className="text-sm font-medium text-gray-700">Massa Grassa (%) *</Label>
+                    <Input
+                      id="fatPercentage"
+                      type="number"
+                      step="0.1"
+                      placeholder="0.0"
+                      value={patientData.fatPercentage}
+                      onChange={(e) => handleInputChange("fatPercentage", e.target.value)}
+                      className="border-gray-300 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
+                  {calculatedResults && (
+                    <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                      <p className="text-sm text-green-800 font-medium">✓ Calcoli aggiornati automaticamente</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Misure Antropometriche */}
             <Card className="shadow-lg border-0">
               <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
@@ -278,15 +361,16 @@ const Index = () => {
               <CardHeader className="bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center">
                   <Activity className="w-5 h-5 mr-2" />
-                  Composizione Corporea
+                  Composizione Corporea (Calcolata)
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-4">
                   {bodyCompositionFields.map((field) => (
                     <div key={field.key} className="space-y-2">
-                      <Label htmlFor={field.key} className="text-sm font-medium text-gray-700">
+                      <Label htmlFor={field.key} className="text-sm font-medium text-gray-700 flex items-center">
                         {field.label}
+                        {field.calculated && <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Auto</span>}
                       </Label>
                       <Input
                         id={field.key}
@@ -296,6 +380,8 @@ const Index = () => {
                         value={patientData.bodyComposition[field.key as keyof typeof patientData.bodyComposition]}
                         onChange={(e) => handleBodyCompositionChange(field.key, e.target.value)}
                         className="border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                        readOnly={field.calculated}
+                        disabled={field.calculated}
                       />
                     </div>
                   ))}
@@ -326,7 +412,7 @@ const Index = () => {
                   <div className="p-3 bg-red-50 rounded-lg text-center">
                     <p className="text-xs text-gray-600">Massa Grassa</p>
                     <p className="text-lg font-bold text-red-600">
-                      {patientData.bodyComposition.fat || "0.0"}%
+                      {patientData.fatPercentage || "0.0"}%
                     </p>
                   </div>
                   <div className="p-3 bg-blue-50 rounded-lg text-center">
