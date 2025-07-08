@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Ruler, Save, TrendingUp, Activity, Calculator } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { calculateBodyComposition, BodyCompositionResults } from "@/utils/bodyCompositionCalculator";
+import { calculateBodyComposition, BodyCompositionResults, getBMICategory, getBMICategoryColor } from "@/utils/bodyCompositionCalculator";
 
 const Index = () => {
   const [patientData, setPatientData] = useState({
@@ -15,8 +16,10 @@ const Index = () => {
     surname: "",
     phone: "",
     email: "",
-    bodyWeight: "", // Nuovo campo per peso corporeo
-    fatPercentage: "", // Nuovo campo per percentuale massa grassa
+    bodyWeight: "", // Peso corporeo
+    height: "", // Altezza in cm
+    gender: "", // Sesso
+    fatPercentage: "", // Percentuale massa grassa
     measurements: {
       braccio: "",
       polso: "",
@@ -36,22 +39,30 @@ const Index = () => {
       ecw: "",
       icw: "",
       bcm: "",
-      ecm: "", // Nuovo campo ECM
-      metabolismoBasale: ""
+      ecm: "",
+      metabolismoBasale: "",
+      bmi: "" // Nuovo campo BMI
     }
   });
 
   const [calculatedResults, setCalculatedResults] = useState<BodyCompositionResults | null>(null);
 
-  // Calcolo automatico quando cambiano peso e percentuale grassa
+  // Calcolo automatico quando cambiano peso, altezza, sesso e percentuale grassa
   useEffect(() => {
     if (patientData.bodyWeight && patientData.fatPercentage) {
       const bodyWeight = parseFloat(patientData.bodyWeight);
       const fatPercentage = parseFloat(patientData.fatPercentage);
+      const height = patientData.height ? parseFloat(patientData.height) : undefined;
+      const gender = patientData.gender as 'male' | 'female' | undefined;
       
       if (bodyWeight > 0 && fatPercentage >= 0 && fatPercentage <= 100) {
         try {
-          const results = calculateBodyComposition({ bodyWeight, fatPercentage });
+          const results = calculateBodyComposition({ 
+            bodyWeight, 
+            fatPercentage, 
+            height,
+            gender 
+          });
           setCalculatedResults(results);
           
           // Aggiorna automaticamente i campi calcolati
@@ -66,7 +77,8 @@ const Index = () => {
               icw: results.icw.toString(),
               bcm: results.bcm.toString(),
               ecm: results.ecm.toString(),
-              metabolismoBasale: results.bmr.toString()
+              metabolismoBasale: results.bmr.toString(),
+              bmi: results.bmi ? results.bmi.toString() : ""
             }
           }));
         } catch (error) {
@@ -75,7 +87,7 @@ const Index = () => {
         }
       }
     }
-  }, [patientData.bodyWeight, patientData.fatPercentage]);
+  }, [patientData.bodyWeight, patientData.fatPercentage, patientData.height, patientData.gender]);
 
   // Dati di esempio per il grafico dei progressi
   const progressData = [
@@ -184,6 +196,7 @@ const Index = () => {
   ];
 
   const bodyCompositionFields = [
+    { key: "bmi", label: "BMI - Indice Massa Corporea", calculated: true },
     { key: "ffm", label: "FFM - Massa Magra (kg)", calculated: true },
     { key: "tbw", label: "TBW - Acqua Totale (L)", calculated: true },
     { key: "ecw", label: "ECW - Acqua Extracell. (L)", calculated: true },
@@ -304,6 +317,30 @@ const Index = () => {
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="height" className="text-sm font-medium text-gray-700">Altezza (cm)</Label>
+                    <Input
+                      id="height"
+                      type="number"
+                      step="0.1"
+                      placeholder="0.0"
+                      value={patientData.height}
+                      onChange={(e) => handleInputChange("height", e.target.value)}
+                      className="border-gray-300 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="gender" className="text-sm font-medium text-gray-700">Sesso</Label>
+                    <Select value={patientData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
+                      <SelectTrigger className="border-gray-300 focus:ring-purple-500 focus:border-purple-500">
+                        <SelectValue placeholder="Seleziona sesso" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Maschio</SelectItem>
+                        <SelectItem value="female">Femmina</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="fatPercentage" className="text-sm font-medium text-gray-700">Massa Grassa (%) *</Label>
                     <Input
                       id="fatPercentage"
@@ -318,6 +355,14 @@ const Index = () => {
                   {calculatedResults && (
                     <div className="mt-4 p-3 bg-green-50 rounded-lg">
                       <p className="text-sm text-green-800 font-medium">✓ Calcoli aggiornati automaticamente</p>
+                      {calculatedResults.bmi && (
+                        <div className="mt-2 p-2 bg-white rounded border">
+                          <p className="text-sm font-medium">BMI: <span className="font-bold">{calculatedResults.bmi}</span></p>
+                          <p className={`text-xs ${getBMICategoryColor(calculatedResults.bmi)}`}>
+                            {getBMICategory(calculatedResults.bmi)}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -383,6 +428,11 @@ const Index = () => {
                         readOnly={field.calculated}
                         disabled={field.calculated}
                       />
+                      {field.key === "bmi" && calculatedResults?.bmi && (
+                        <p className={`text-xs mt-1 ${getBMICategoryColor(calculatedResults.bmi)}`}>
+                          {getBMICategory(calculatedResults.bmi)}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -409,6 +459,17 @@ const Index = () => {
               </CardHeader>
               <CardContent className="p-4">
                 <div className="grid grid-cols-2 gap-3 text-sm">
+                  {calculatedResults?.bmi && (
+                    <div className="p-3 bg-indigo-50 rounded-lg text-center col-span-2">
+                      <p className="text-xs text-gray-600">BMI</p>
+                      <p className={`text-lg font-bold ${getBMICategoryColor(calculatedResults.bmi)}`}>
+                        {calculatedResults.bmi}
+                      </p>
+                      <p className={`text-xs ${getBMICategoryColor(calculatedResults.bmi)}`}>
+                        {getBMICategory(calculatedResults.bmi)}
+                      </p>
+                    </div>
+                  )}
                   <div className="p-3 bg-red-50 rounded-lg text-center">
                     <p className="text-xs text-gray-600">Massa Grassa</p>
                     <p className="text-lg font-bold text-red-600">

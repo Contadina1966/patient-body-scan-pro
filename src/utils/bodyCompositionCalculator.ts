@@ -2,6 +2,8 @@
 export interface BodyCompositionInput {
   bodyWeight: number; // BW - Peso corporeo in kg
   fatPercentage: number; // FAT% - Percentuale di massa grassa
+  height?: number; // Altezza in cm
+  gender?: 'male' | 'female'; // Sesso
 }
 
 export interface BodyCompositionResults {
@@ -12,10 +14,11 @@ export interface BodyCompositionResults {
   bcm: number; // BCM - Massa Cellulare in kg
   ecm: number; // ECM - Massa Extracellulare in kg
   bmr: number; // BMR - Metabolismo Basale in kcal
+  bmi?: number; // BMI - Indice di Massa Corporea
 }
 
 export const calculateBodyComposition = (input: BodyCompositionInput): BodyCompositionResults => {
-  const { bodyWeight, fatPercentage } = input;
+  const { bodyWeight, fatPercentage, height, gender } = input;
   
   // Validazione input
   if (bodyWeight <= 0 || fatPercentage < 0 || fatPercentage > 100) {
@@ -43,7 +46,14 @@ export const calculateBodyComposition = (input: BodyCompositionInput): BodyCompo
   // BMR = 370 + (21,6 × FFM)
   const bmr = 370 + (21.6 * ffm);
   
-  return {
+  // BMI = peso (kg) / altezza (m)²
+  let bmi: number | undefined;
+  if (height && height > 0) {
+    const heightInMeters = height / 100;
+    bmi = bodyWeight / (heightInMeters * heightInMeters);
+  }
+  
+  const results: BodyCompositionResults = {
     ffm: Math.round(ffm * 10) / 10,
     tbw: Math.round(tbw * 10) / 10,
     icw: Math.round(icw * 10) / 10,
@@ -52,4 +62,24 @@ export const calculateBodyComposition = (input: BodyCompositionInput): BodyCompo
     ecm: Math.round(ecm * 10) / 10,
     bmr: Math.round(bmr)
   };
+  
+  if (bmi !== undefined) {
+    results.bmi = Math.round(bmi * 10) / 10;
+  }
+  
+  return results;
+};
+
+export const getBMICategory = (bmi: number): string => {
+  if (bmi < 18.5) return "Sottopeso";
+  if (bmi < 25) return "Normopeso"; 
+  if (bmi < 30) return "Sovrappeso";
+  return "Obesità";
+};
+
+export const getBMICategoryColor = (bmi: number): string => {
+  if (bmi < 18.5) return "text-blue-600";
+  if (bmi < 25) return "text-green-600";
+  if (bmi < 30) return "text-yellow-600";
+  return "text-red-600";
 };
