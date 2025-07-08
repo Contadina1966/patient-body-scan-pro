@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Ruler, Save, TrendingUp, Activity, Calculator } from "lucide-react";
+import { User, Ruler, Save, TrendingUp, Activity, Calculator, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { calculateBodyComposition, BodyCompositionResults, getBMICategory, getBMICategoryColor } from "@/utils/bodyCompositionCalculator";
@@ -170,6 +170,10 @@ const Index = () => {
     }));
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const handleSave = () => {
     // Validazione base
     if (!patientData.name || !patientData.surname) {
@@ -226,10 +230,16 @@ const Index = () => {
                 <p className="text-sm text-gray-500">Sistema professionale per analisi antropometrica e composizione corporea</p>
               </div>
             </div>
-            <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-              <Save className="w-4 h-4 mr-2" />
-              Salva Report
-            </Button>
+            <div className="flex space-x-3">
+              <Button onClick={handlePrint} variant="outline" className="border-gray-300 hover:bg-gray-50">
+                <Printer className="w-4 h-4 mr-2" />
+                Stampa Report
+              </Button>
+              <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+                <Save className="w-4 h-4 mr-2" />
+                Salva Report
+              </Button>
+            </div>
           </div>
         </div>
 
