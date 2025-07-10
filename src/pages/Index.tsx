@@ -8,7 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { User, Ruler, Save, TrendingUp, Activity, Calculator, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { calculateBodyComposition, BodyCompositionResults, getBMICategory, getBMICategoryColor } from "@/utils/bodyCompositionCalculator";
+import { calculateBodyComposition, BodyCompositionResults, getBMICategory, getBMICategoryColor, getFatPercentageCategory, getFatPercentageCategoryColor, getEcwIcwRatioStatus } from "@/utils/bodyCompositionCalculator";
+import ProgressCharts from "@/components/ProgressCharts";
+import ReferenceValues from "@/components/ReferenceValues";
 
 const Index = () => {
   const [patientData, setPatientData] = useState({
@@ -19,6 +21,7 @@ const Index = () => {
     bodyWeight: "", // Peso corporeo
     height: "", // Altezza in cm
     gender: "", // Sesso
+    age: "", // Età
     fatPercentage: "", // Percentuale massa grassa
     measurements: {
       braccio: "",
@@ -41,19 +44,22 @@ const Index = () => {
       bcm: "",
       ecm: "",
       metabolismoBasale: "",
-      bmi: "" // Nuovo campo BMI
+      bmi: "",
+      ecwIcwRatio: "",
+      tbwFfmRatio: ""
     }
   });
 
   const [calculatedResults, setCalculatedResults] = useState<BodyCompositionResults | null>(null);
 
-  // Calcolo automatico quando cambiano peso, altezza, sesso e percentuale grassa
+  // Calcolo automatico quando cambiano peso, altezza, sesso, età e percentuale grassa
   useEffect(() => {
     if (patientData.bodyWeight && patientData.fatPercentage) {
       const bodyWeight = parseFloat(patientData.bodyWeight);
       const fatPercentage = parseFloat(patientData.fatPercentage);
       const height = patientData.height ? parseFloat(patientData.height) : undefined;
       const gender = patientData.gender as 'male' | 'female' | undefined;
+      const age = patientData.age ? parseFloat(patientData.age) : undefined;
       
       if (bodyWeight > 0 && fatPercentage >= 0 && fatPercentage <= 100) {
         try {
@@ -61,7 +67,8 @@ const Index = () => {
             bodyWeight, 
             fatPercentage, 
             height,
-            gender 
+            gender,
+            age
           });
           setCalculatedResults(results);
           
@@ -78,7 +85,9 @@ const Index = () => {
               bcm: results.bcm.toString(),
               ecm: results.ecm.toString(),
               metabolismoBasale: results.bmr.toString(),
-              bmi: results.bmi ? results.bmi.toString() : ""
+              bmi: results.bmi ? results.bmi.toString() : "",
+              ecwIcwRatio: results.ecwIcwRatio ? results.ecwIcwRatio.toString() : "",
+              tbwFfmRatio: results.tbwFfmRatio ? results.tbwFfmRatio.toString() : ""
             }
           }));
         } catch (error) {
@@ -87,7 +96,7 @@ const Index = () => {
         }
       }
     }
-  }, [patientData.bodyWeight, patientData.fatPercentage, patientData.height, patientData.gender]);
+  }, [patientData.bodyWeight, patientData.fatPercentage, patientData.height, patientData.gender, patientData.age]);
 
   // Dati di esempio per il grafico dei progressi
   const progressData = [
@@ -207,7 +216,9 @@ const Index = () => {
     { key: "icw", label: "ICW - Acqua Intracell. (L)", calculated: true },
     { key: "bcm", label: "BCM - Massa Cellulare (kg)", calculated: true },
     { key: "ecm", label: "ECM - Massa Extracell. (kg)", calculated: true },
-    { key: "metabolismoBasale", label: "Metabolismo Basale (kcal)", calculated: true }
+    { key: "metabolismoBasale", label: "Metabolismo Basale (kcal)", calculated: true },
+    { key: "ecwIcwRatio", label: "Rapporto ECW/ICW", calculated: true },
+    { key: "tbwFfmRatio", label: "Rapporto TBW/FFM", calculated: true }
   ];
 
   return (
@@ -351,6 +362,17 @@ const Index = () => {
                     </Select>
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="age" className="text-sm font-medium text-gray-700">Età (anni)</Label>
+                    <Input
+                      id="age"
+                      type="number"
+                      placeholder="0"
+                      value={patientData.age}
+                      onChange={(e) => handleInputChange("age", e.target.value)}
+                      className="border-gray-300 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="fatPercentage" className="text-sm font-medium text-gray-700">Massa Grassa (%) *</Label>
                     <Input
                       id="fatPercentage"
@@ -370,6 +392,14 @@ const Index = () => {
                           <p className="text-sm font-medium">BMI: <span className="font-bold">{calculatedResults.bmi}</span></p>
                           <p className={`text-xs ${getBMICategoryColor(calculatedResults.bmi)}`}>
                             {getBMICategory(calculatedResults.bmi)}
+                          </p>
+                        </div>
+                      )}
+                      {patientData.gender && patientData.fatPercentage && (
+                        <div className="mt-2 p-2 bg-white rounded border">
+                          <p className="text-sm font-medium">Massa Grassa: <span className="font-bold">{patientData.fatPercentage}%</span></p>
+                          <p className={`text-xs ${getFatPercentageCategoryColor(parseFloat(patientData.fatPercentage), patientData.gender as 'male' | 'female')}`}>
+                            {getFatPercentageCategory(parseFloat(patientData.fatPercentage), patientData.gender as 'male' | 'female')}
                           </p>
                         </div>
                       )}
@@ -443,6 +473,11 @@ const Index = () => {
                           {getBMICategory(calculatedResults.bmi)}
                         </p>
                       )}
+                      {field.key === "ecwIcwRatio" && calculatedResults?.ecwIcwRatio && (
+                        <p className={`text-xs mt-1 ${getEcwIcwRatioStatus(calculatedResults.ecwIcwRatio).color}`}>
+                          {getEcwIcwRatioStatus(calculatedResults.ecwIcwRatio).status}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -507,92 +542,14 @@ const Index = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Valori di Riferimento */}
+            <ReferenceValues gender={patientData.gender as 'male' | 'female'} />
           </div>
 
-          {/* Colonna Destra - Grafico Progressi */}
+          {/* Colonna Destra - Grafici Progressi */}
           <div className="space-y-6">
-            <Card className="shadow-lg border-0">
-              <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center">
-                  <TrendingUp className="w-5 h-5 mr-2" />
-                  Progressi nel Tempo
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="h-80 mb-6">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={progressData}
-                      margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="petto" 
-                        stroke="#3b82f6" 
-                        strokeWidth={2}
-                        name="Petto (cm)"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="vita" 
-                        stroke="#10b981" 
-                        strokeWidth={2}
-                        name="Vita (cm)"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="fat" 
-                        stroke="#ef4444" 
-                        strokeWidth={2}
-                        name="Massa Grassa (%)"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="ffm" 
-                        stroke="#8b5cf6" 
-                        strokeWidth={2}
-                        name="Massa Magra (kg)"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-                
-                <Separator className="my-4" />
-                
-                <div className="grid grid-cols-1 gap-3 text-center">
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Circonferenza Vita</p>
-                    <p className="text-lg font-bold text-blue-600">-8 cm</p>
-                    <p className="text-xs text-green-600">↓ Miglioramento</p>
-                  </div>
-                  <div className="p-3 bg-red-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Massa Grassa</p>
-                    <p className="text-lg font-bold text-red-600">-5.0%</p>
-                    <p className="text-xs text-green-600">↓ Riduzione</p>
-                  </div>
-                  <div className="p-3 bg-purple-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Massa Magra</p>
-                    <p className="text-lg font-bold text-purple-600">+4.5 kg</p>
-                    <p className="text-xs text-green-600">↑ Aumento</p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Periodo</p>
-                    <p className="text-lg font-bold text-gray-800">5 mesi</p>
-                    <p className="text-xs text-blue-600">Monitoraggio</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <ProgressCharts />
           </div>
         </div>
 
