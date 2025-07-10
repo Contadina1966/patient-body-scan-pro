@@ -275,7 +275,6 @@ const Index = () => {
                       placeholder="Inserisci il nome"
                       value={patientData.name}
                       onChange={(e) => handleInputChange("name", e.target.value)}
-                      className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                   <div className="space-y-2">
