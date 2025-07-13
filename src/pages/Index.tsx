@@ -11,9 +11,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { calculateBodyComposition, BodyCompositionResults, getBMICategory, getBMICategoryColor, getFatPercentageCategory, getFatPercentageCategoryColor, getEcwIcwRatioStatus } from "@/utils/bodyCompositionCalculator";
 import ProgressCharts from "@/components/ProgressCharts";
 import ReferenceValues from "@/components/ReferenceValues";
+import { useNutritionData, PatientData } from "@/hooks/useNutritionData";
 
 const Index = () => {
-  const [patientData, setPatientData] = useState({
+  const { saveNutritionReport, isLoading } = useNutritionData();
+  
+  const [patientData, setPatientData] = useState<PatientData>({
     name: "",
     surname: "",
     phone: "",
@@ -183,16 +186,8 @@ const Index = () => {
     window.print();
   };
 
-  const handleSave = () => {
-    // Validazione base
-    if (!patientData.name || !patientData.surname) {
-      toast.error("Nome e cognome sono obbligatori");
-      return;
-    }
-    
-    console.log("Dati paziente salvati:", patientData);
-    console.log("Risultati calcolati:", calculatedResults);
-    toast.success("Report paziente salvato con successo!");
+  const handleSave = async () => {
+    await saveNutritionReport(patientData);
   };
 
   const measurementFields = [
@@ -246,9 +241,13 @@ const Index = () => {
                 <Printer className="w-4 h-4 mr-2" />
                 Stampa Report
               </Button>
-              <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+              <Button 
+                onClick={handleSave} 
+                disabled={isLoading}
+                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+              >
                 <Save className="w-4 h-4 mr-2" />
-                Salva Report
+                {isLoading ? "Salvando..." : "Salva Report"}
               </Button>
             </div>
           </div>

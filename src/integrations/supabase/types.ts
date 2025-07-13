@@ -14,7 +14,240 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      anthropometric_measurements: {
+        Row: {
+          braccio: number | null
+          caviglia: number | null
+          created_at: string
+          fianchi: number | null
+          ginocchio: number | null
+          id: string
+          med_coscia: number | null
+          petto: number | null
+          polso: number | null
+          rad_coscia: number | null
+          report_id: string
+          spalle: number | null
+          user_id: string | null
+          vita: number | null
+        }
+        Insert: {
+          braccio?: number | null
+          caviglia?: number | null
+          created_at?: string
+          fianchi?: number | null
+          ginocchio?: number | null
+          id?: string
+          med_coscia?: number | null
+          petto?: number | null
+          polso?: number | null
+          rad_coscia?: number | null
+          report_id: string
+          spalle?: number | null
+          user_id?: string | null
+          vita?: number | null
+        }
+        Update: {
+          braccio?: number | null
+          caviglia?: number | null
+          created_at?: string
+          fianchi?: number | null
+          ginocchio?: number | null
+          id?: string
+          med_coscia?: number | null
+          petto?: number | null
+          polso?: number | null
+          rad_coscia?: number | null
+          report_id?: string
+          spalle?: number | null
+          user_id?: string | null
+          vita?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anthropometric_measurements_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nutrition_reports: {
+        Row: {
+          age: number | null
+          bcm: number | null
+          bmi: number | null
+          bmr: number | null
+          body_weight: number | null
+          created_at: string
+          ecm: number | null
+          ecw: number | null
+          ecw_icw_ratio: number | null
+          fat_percentage: number | null
+          ffm: number | null
+          gender: string | null
+          height: number | null
+          icw: number | null
+          id: string
+          patient_id: string
+          tbw: number | null
+          tbw_ffm_ratio: number | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          age?: number | null
+          bcm?: number | null
+          bmi?: number | null
+          bmr?: number | null
+          body_weight?: number | null
+          created_at?: string
+          ecm?: number | null
+          ecw?: number | null
+          ecw_icw_ratio?: number | null
+          fat_percentage?: number | null
+          ffm?: number | null
+          gender?: string | null
+          height?: number | null
+          icw?: number | null
+          id?: string
+          patient_id: string
+          tbw?: number | null
+          tbw_ffm_ratio?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          age?: number | null
+          bcm?: number | null
+          bmi?: number | null
+          bmr?: number | null
+          body_weight?: number | null
+          created_at?: string
+          ecm?: number | null
+          ecw?: number | null
+          ecw_icw_ratio?: number | null
+          fat_percentage?: number | null
+          ffm?: number | null
+          gender?: string | null
+          height?: number | null
+          icw?: number | null
+          id?: string
+          patient_id?: string
+          tbw?: number | null
+          tbw_ffm_ratio?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_reports_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          surname: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          surname: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          surname?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      progress_tracking: {
+        Row: {
+          bcm: number | null
+          bmr: number | null
+          body_weight: number | null
+          braccio: number | null
+          created_at: string
+          fat_percentage: number | null
+          ffm: number | null
+          fianchi: number | null
+          id: string
+          measurement_date: string
+          patient_id: string
+          petto: number | null
+          rad_coscia: number | null
+          tbw: number | null
+          user_id: string | null
+          vita: number | null
+        }
+        Insert: {
+          bcm?: number | null
+          bmr?: number | null
+          body_weight?: number | null
+          braccio?: number | null
+          created_at?: string
+          fat_percentage?: number | null
+          ffm?: number | null
+          fianchi?: number | null
+          id?: string
+          measurement_date?: string
+          patient_id: string
+          petto?: number | null
+          rad_coscia?: number | null
+          tbw?: number | null
+          user_id?: string | null
+          vita?: number | null
+        }
+        Update: {
+          bcm?: number | null
+          bmr?: number | null
+          body_weight?: number | null
+          braccio?: number | null
+          created_at?: string
+          fat_percentage?: number | null
+          ffm?: number | null
+          fianchi?: number | null
+          id?: string
+          measurement_date?: string
+          patient_id?: string
+          petto?: number | null
+          rad_coscia?: number | null
+          tbw?: number | null
+          user_id?: string | null
+          vita?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_tracking_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
