@@ -5,16 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Ruler, Save, TrendingUp, Activity, Calculator, Printer } from "lucide-react";
+import { User, Ruler, Save, TrendingUp, Activity, Calculator, Printer, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { calculateBodyComposition, BodyCompositionResults, getBMICategory, getBMICategoryColor, getFatPercentageCategory, getFatPercentageCategoryColor, getEcwIcwRatioStatus } from "@/utils/bodyCompositionCalculator";
 import ProgressCharts from "@/components/ProgressCharts";
 import ReferenceValues from "@/components/ReferenceValues";
 import { useNutritionData, PatientData } from "@/hooks/useNutritionData";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const { saveNutritionReport, isLoading } = useNutritionData();
+  const { signOut, profile, user } = useAuth();
   
   const [patientData, setPatientData] = useState<PatientData>({
     name: "",
@@ -190,6 +192,10 @@ const Index = () => {
     await saveNutritionReport(patientData);
   };
 
+  const handleLogout = async () => {
+    await signOut();
+  };
+
   const measurementFields = [
     { key: "braccio", label: "Braccio (cm)" },
     { key: "polso", label: "Polso (cm)" },
@@ -234,9 +240,18 @@ const Index = () => {
                 <h1 className="text-3xl font-bold text-gray-800">Report Nutrizionale Completo</h1>
                 <p className="text-gray-600">Dott.ssa Anna Cosentino - Biologa Nutrizionista</p>
                 <p className="text-sm text-gray-500">Sistema professionale per analisi antropometrica e composizione corporea</p>
+                {user && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    Connesso come: {user.email} {profile?.role === 'admin' && '(Admin)'}
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex space-x-3">
+              <Button onClick={handleLogout} variant="outline" className="border-red-300 text-red-600 hover:bg-red-50">
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
               <Button onClick={handlePrint} variant="outline" className="border-gray-300 hover:bg-gray-50">
                 <Printer className="w-4 h-4 mr-2" />
                 Stampa Report
