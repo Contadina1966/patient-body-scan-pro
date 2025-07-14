@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Ruler, Save, TrendingUp, Activity, Calculator, Printer, LogOut } from "lucide-react";
+import { User, Ruler, Save, TrendingUp, Activity, Calculator, Printer, LogOut, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { calculateBodyComposition, BodyCompositionResults, getBMICategory, getBMICategoryColor, getFatPercentageCategory, getFatPercentageCategoryColor, getEcwIcwRatioStatus } from "@/utils/bodyCompositionCalculator";
@@ -13,6 +13,7 @@ import ProgressCharts from "@/components/ProgressCharts";
 import ReferenceValues from "@/components/ReferenceValues";
 import { useNutritionData, PatientData } from "@/hooks/useNutritionData";
 import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const { saveNutritionReport, isLoading } = useNutritionData();
@@ -248,10 +249,20 @@ const Index = () => {
               </div>
             </div>
             <div className="flex space-x-3">
-              <Button onClick={handleLogout} variant="outline" className="border-red-300 text-red-600 hover:bg-red-50">
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
+              {!user && (
+                <Button asChild variant="outline" className="border-blue-300 text-blue-600 hover:bg-blue-50">
+                  <Link to="/auth">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Login / Registrati
+                  </Link>
+                </Button>
+              )}
+              {user && (
+                <Button onClick={handleLogout} variant="outline" className="border-red-300 text-red-600 hover:bg-red-50">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
+              )}
               <Button onClick={handlePrint} variant="outline" className="border-gray-300 hover:bg-gray-50">
                 <Printer className="w-4 h-4 mr-2" />
                 Stampa Report
