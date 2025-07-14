@@ -186,7 +186,75 @@ const Index = () => {
   };
 
   const handlePrint = () => {
-    window.print();
+    const printContent = document.getElementById('print-content');
+    if (printContent) {
+      const printWindow = window.open('', '', 'height=600,width=800');
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Report Nutrizionale - ${patientData.name} ${patientData.surname}</title>
+              <style>
+                body { 
+                  font-family: Arial, sans-serif; 
+                  margin: 15px; 
+                  color: #333;
+                  line-height: 1.3;
+                  font-size: 12px;
+                }
+                .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #333; padding-bottom: 8px; }
+                .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+                .section { margin-bottom: 10px; }
+                .section h3 { 
+                  color: #2563eb; 
+                  font-size: 14px;
+                  margin: 0 0 8px 0;
+                  border-bottom: 1px solid #e5e7eb; 
+                  padding-bottom: 3px; 
+                }
+                table { 
+                  width: 100%; 
+                  border-collapse: collapse; 
+                  font-size: 11px;
+                  margin-bottom: 8px;
+                }
+                th, td { 
+                  border: 1px solid #ddd; 
+                  padding: 4px 6px; 
+                  text-align: left; 
+                }
+                th { 
+                  background: #f8fafc; 
+                  font-weight: bold; 
+                  color: #374151;
+                }
+                .legend { 
+                  background: #f0f9ff; 
+                  padding: 8px; 
+                  border-radius: 4px; 
+                  font-size: 10px;
+                  margin-top: 10px;
+                }
+                .legend h4 { margin: 0 0 5px 0; font-size: 11px; color: #2563eb; }
+                .normal { color: #059669; font-weight: bold; }
+                .warning { color: #d97706; font-weight: bold; }
+                .danger { color: #dc2626; font-weight: bold; }
+                .progress-charts { margin-top: 15px; page-break-before: always; }
+                @media print { 
+                  body { margin: 10px; } 
+                  .page-break { page-break-before: always; }
+                }
+              </style>
+            </head>
+            <body>
+              ${printContent.innerHTML}
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    }
   };
 
   const handleSave = async () => {
@@ -278,6 +346,41 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Selezione Paziente */}
+        {user && (
+          <Card className="shadow-lg border-0">
+            <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
+              <CardTitle className="flex items-center">
+                <User className="w-5 h-5 mr-2" />
+                Selezione Paziente
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="patient-select" className="text-sm font-medium text-gray-700">Seleziona un paziente esistente:</Label>
+                  <Select onValueChange={(value) => {
+                    // Qui caricheresti i dati del paziente selezionato
+                    toast.success(`Paziente selezionato: ${value}`);
+                  }}>
+                    <SelectTrigger className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
+                      <SelectValue placeholder="Scegli paziente..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mario-rossi">Mario Rossi</SelectItem>
+                      <SelectItem value="giulia-bianchi">Giulia Bianchi</SelectItem>
+                      <SelectItem value="luca-verdi">Luca Verdi</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Seleziona un paziente per caricare automaticamente i suoi dati e le misurazioni precedenti.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Colonna Sinistra - Dati Anagrafici */}
@@ -581,6 +684,151 @@ const Index = () => {
         <div className="text-center text-gray-500 text-sm">
           <p>Report generato dal Sistema Professionale di Analisi Nutrizionale</p>
           <p className="font-medium">Dott.ssa Anna Cosentino - Biologa Nutrizionista</p>
+        </div>
+
+        {/* Contenuto di Stampa - Nascosto */}
+        <div id="print-content" className="hidden">
+          {/* Header */}
+          <div className="header">
+            <h1>Report Nutrizionale Completo</h1>
+            <h2>Dott.ssa Anna Cosentino - Biologa Nutrizionista</h2>
+            <p><strong>Paziente:</strong> {patientData.name} {patientData.surname}</p>
+            <p><strong>Data:</strong> {new Date().toLocaleDateString('it-IT')}</p>
+          </div>
+
+          {/* Dati Principali in Due Colonne */}
+          <div className="two-column">
+            {/* Colonna Sinistra */}
+            <div>
+              <div className="section">
+                <h3>Dati Anagrafici e Parametri Base</h3>
+                <table>
+                  <tbody>
+                    <tr><td><strong>Nome</strong></td><td>{patientData.name}</td></tr>
+                    <tr><td><strong>Cognome</strong></td><td>{patientData.surname}</td></tr>
+                    <tr><td><strong>Telefono</strong></td><td>{patientData.phone}</td></tr>
+                    <tr><td><strong>Email</strong></td><td>{patientData.email}</td></tr>
+                    <tr><td><strong>Peso (kg)</strong></td><td>{patientData.bodyWeight}</td></tr>
+                    <tr><td><strong>Altezza (cm)</strong></td><td>{patientData.height}</td></tr>
+                    <tr><td><strong>Sesso</strong></td><td>{patientData.gender === 'male' ? 'Maschio' : patientData.gender === 'female' ? 'Femmina' : ''}</td></tr>
+                    <tr><td><strong>Età (anni)</strong></td><td>{patientData.age}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="section">
+                <h3>Misure Antropometriche (cm)</h3>
+                <table>
+                  <tbody>
+                    {measurementFields.map((field) => (
+                      <tr key={field.key}>
+                        <td><strong>{field.label}</strong></td>
+                        <td>{patientData.measurements[field.key as keyof typeof patientData.measurements] || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Colonna Destra */}
+            <div>
+              <div className="section">
+                <h3>Composizione Corporea</h3>
+                <table>
+                  <tbody>
+                    <tr><td><strong>Massa Grassa (%)</strong></td><td>{patientData.fatPercentage}</td></tr>
+                    {bodyCompositionFields.map((field) => (
+                      <tr key={field.key}>
+                        <td><strong>{field.label}</strong></td>
+                        <td>{patientData.bodyComposition[field.key as keyof typeof patientData.bodyComposition] || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="section">
+                <h3>Parametri Chiave</h3>
+                <table>
+                  <tbody>
+                    {calculatedResults?.bmi && (
+                      <tr>
+                        <td><strong>BMI</strong></td>
+                        <td className={getBMICategoryColor(calculatedResults.bmi)}>{calculatedResults.bmi} - {getBMICategory(calculatedResults.bmi)}</td>
+                      </tr>
+                    )}
+                    {patientData.gender && patientData.fatPercentage && (
+                      <tr>
+                        <td><strong>Categoria Massa Grassa</strong></td>
+                        <td className={getFatPercentageCategoryColor(parseFloat(patientData.fatPercentage), patientData.gender as 'male' | 'female')}>
+                          {getFatPercentageCategory(parseFloat(patientData.fatPercentage), patientData.gender as 'male' | 'female')}
+                        </td>
+                      </tr>
+                    )}
+                    {calculatedResults?.ecwIcwRatio && (
+                      <tr>
+                        <td><strong>Stato Idratazione</strong></td>
+                        <td className={getEcwIcwRatioStatus(calculatedResults.ecwIcwRatio).color}>
+                          {getEcwIcwRatioStatus(calculatedResults.ecwIcwRatio).status}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Legenda Valori di Riferimento */}
+          <div className="legend">
+            <h4>Legenda e Valori di Riferimento</h4>
+            <p><strong>BMI:</strong> <span className="normal">18.5-24.9 Normale</span> | <span className="warning">25-29.9 Sovrappeso</span> | <span className="danger">&gt;30 Obeso</span></p>
+            <p><strong>Massa Grassa {patientData.gender === 'male' ? 'Maschio' : 'Femmina'}:</strong> 
+              {patientData.gender === 'male' ? (
+                <span> <span className="normal">6-17% Normale</span> | <span className="warning">18-24% Elevata</span> | <span className="danger">&gt;25% Molto Elevata</span></span>
+              ) : (
+                <span> <span className="normal">14-24% Normale</span> | <span className="warning">25-31% Elevata</span> | <span className="danger">&gt;32% Molto Elevata</span></span>
+              )}
+            </p>
+            <p><strong>Note:</strong> FFM = Massa Magra, TBW = Acqua Totale, ECW = Acqua Extracellulare, ICW = Acqua Intracellulare, BCM = Massa Cellulare</p>
+            <p><strong>Interpretazione:</strong> I valori calcolati utilizzano equazioni validate per l'analisi della composizione corporea. Consultare sempre un professionista qualificato per l'interpretazione completa.</p>
+          </div>
+
+          {/* Grafici dei Progressi - Pagina Separata */}
+          <div className="progress-charts">
+            <h3>Grafici dei Progressi</h3>
+            <div style={{width: '100%', height: '400px', marginBottom: '20px'}}>
+              <h4>Evoluzione Misure Corporee</h4>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={progressData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="petto" stroke="#8884d8" name="Petto" />
+                  <Line type="monotone" dataKey="vita" stroke="#82ca9d" name="Vita" />
+                  <Line type="monotone" dataKey="fianchi" stroke="#ffc658" name="Fianchi" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            
+            <div style={{width: '100%', height: '400px'}}>
+              <h4>Evoluzione Composizione Corporea</h4>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={progressData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="fat" stroke="#ff7300" name="Massa Grassa %" />
+                  <Line type="monotone" dataKey="ffm" stroke="#387908" name="Massa Magra kg" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       </div>
     </div>
