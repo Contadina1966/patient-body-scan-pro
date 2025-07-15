@@ -148,10 +148,17 @@ const Index = () => {
     }
   };
 
-  // Dati di esempio per il grafico dei progressi
+  // Dati di esempio per il grafico dei progressi con date aggiornate
+  const getCurrentDate = () => new Date();
+  const getMonthsAgo = (months: number) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - months);
+    return date.toLocaleDateString('it-IT', { month: 'short', year: 'numeric' });
+  };
+
   const progressData = [
     {
-      date: "Gen 2024",
+      date: getMonthsAgo(4),
       petto: 95,
       vita: 85,
       fianchi: 98,
@@ -161,7 +168,7 @@ const Index = () => {
       ffm: 58.3
     },
     {
-      date: "Feb 2024",
+      date: getMonthsAgo(3),
       petto: 93,
       vita: 83,
       fianchi: 96,
@@ -171,7 +178,7 @@ const Index = () => {
       ffm: 59.1
     },
     {
-      date: "Mar 2024",
+      date: getMonthsAgo(2),
       petto: 91,
       vita: 81,
       fianchi: 94,
@@ -181,7 +188,7 @@ const Index = () => {
       ffm: 60.2
     },
     {
-      date: "Apr 2024",
+      date: getMonthsAgo(1),
       petto: 89,
       vita: 79,
       fianchi: 92,
@@ -191,7 +198,7 @@ const Index = () => {
       ffm: 61.5
     },
     {
-      date: "Mag 2024",
+      date: getMonthsAgo(0),
       petto: 87,
       vita: 77,
       fianchi: 90,
