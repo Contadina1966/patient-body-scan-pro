@@ -13,6 +13,7 @@ import ProgressCharts from "@/components/ProgressCharts";
 import ReferenceValues from "@/components/ReferenceValues";
 import { useNutritionData, PatientData } from "@/hooks/useNutritionData";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -127,17 +128,53 @@ const Index = () => {
     setSelectedPatientId(patientId);
     const selectedPatient = patients.find(p => p.id === patientId);
     if (selectedPatient) {
-      // Carica i dati del paziente selezionato
-      setPatientData(prev => ({
-        ...prev,
-        name: selectedPatient.name,
-        surname: selectedPatient.surname,
-        phone: selectedPatient.phone || "",
-        email: selectedPatient.email || ""
-      }));
-      
-      // Carica i dati di progresso
       try {
+        // Carica il report più recente del paziente
+        const { data: reports, error } = await supabase
+          .from('nutrition_reports')
+          .select('*')
+          .eq('patient_id', patientId)
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.error('Errore nel caricamento report:', error);
+          toast.error('Errore nel caricamento dati paziente');
+          return;
+        }
+
+        const latestReport = reports?.[0];
+
+        // Carica i dati del paziente selezionato
+        setPatientData(prev => ({
+          ...prev,
+          name: selectedPatient.name,
+          surname: selectedPatient.surname,
+          phone: selectedPatient.phone || "",
+          email: selectedPatient.email || "",
+          // Carica dati dal report più recente se disponibile
+          bodyWeight: latestReport?.body_weight?.toString() || "",
+          height: latestReport?.height?.toString() || "",
+          age: latestReport?.age?.toString() || "",
+          gender: latestReport?.gender || "",
+          fatPercentage: latestReport?.fat_percentage?.toString() || "",
+          bodyComposition: {
+            fat: latestReport?.fat_percentage?.toString() || "",
+            ffm: latestReport?.ffm?.toString() || "",
+            tbw: latestReport?.tbw?.toString() || "",
+            ecw: latestReport?.ecw?.toString() || "",
+            icw: latestReport?.icw?.toString() || "",
+            bcm: latestReport?.bcm?.toString() || "",
+            ecm: latestReport?.ecm?.toString() || "",
+            metabolismoBasale: latestReport?.bmr?.toString() || "",
+            bmi: latestReport?.bmi?.toString() || "",
+            ecwIcwRatio: latestReport?.ecw_icw_ratio?.toString() || "",
+            tbwFfmRatio: latestReport?.tbw_ffm_ratio?.toString() || ""
+          }
+        }));
+        
+        // Carica i dati di progresso
         const progressData = await loadProgressData(patientId);
         if (progressData && progressData.length > 0) {
           const formattedData = progressData.map((item: any) => ({
@@ -153,9 +190,11 @@ const Index = () => {
         } else {
           setRealProgressData([]);
         }
-        toast.success(`Paziente ${selectedPatient.name} ${selectedPatient.surname} caricato`);
+        
+        toast.success(`Paziente ${selectedPatient.name} ${selectedPatient.surname} caricato con successo`);
       } catch (error) {
         console.error('Errore nel caricamento progressi:', error);
+        toast.error('Errore nel caricamento dati');
         setRealProgressData([]);
       }
     }
