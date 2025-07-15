@@ -139,7 +139,20 @@ const Index = () => {
       // Carica i dati di progresso
       try {
         const progressData = await loadProgressData(patientId);
-        setRealProgressData(progressData);
+        if (progressData && progressData.length > 0) {
+          const formattedData = progressData.map((item: any) => ({
+            date: new Date(item.measurement_date).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' }),
+            petto: item.petto || 0,
+            vita: item.vita || 0,
+            fianchi: item.fianchi || 0,
+            braccio: item.braccio || 0,
+            fat: item.fat_percentage || 0,
+            ffm: item.ffm || 0
+          }));
+          setRealProgressData(formattedData);
+        } else {
+          setRealProgressData([]);
+        }
         toast.success(`Paziente ${selectedPatient.name} ${selectedPatient.surname} caricato`);
       } catch (error) {
         console.error('Errore nel caricamento progressi:', error);
