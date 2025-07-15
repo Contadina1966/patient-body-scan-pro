@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
 
 const Index = () => {
-  const { saveNutritionReport, isLoading } = useNutritionData();
+  const { saveNutritionReport, loadPatients, loadProgressData, isLoading } = useNutritionData();
   const { signOut, profile, user } = useAuth();
   
   const [patientData, setPatientData] = useState<PatientData>({
@@ -57,6 +57,9 @@ const Index = () => {
   });
 
   const [calculatedResults, setCalculatedResults] = useState<BodyCompositionResults | null>(null);
+  const [patients, setPatients] = useState<any[]>([]);
+  const [selectedPatientId, setSelectedPatientId] = useState<string>("");
+  const [realProgressData, setRealProgressData] = useState<any[]>([]);
 
   // Calcolo automatico quando cambiano peso, altezza, sesso, età e percentuale grassa
   useEffect(() => {
@@ -103,6 +106,47 @@ const Index = () => {
       }
     }
   }, [patientData.bodyWeight, patientData.fatPercentage, patientData.height, patientData.gender, patientData.age]);
+
+  // Carica i pazienti quando si logga
+  useEffect(() => {
+    if (user) {
+      loadPatientsData();
+    }
+  }, [user]);
+
+  const loadPatientsData = async () => {
+    try {
+      const patientsData = await loadPatients();
+      setPatients(patientsData);
+    } catch (error) {
+      console.error('Errore nel caricamento pazienti:', error);
+    }
+  };
+
+  const handlePatientSelect = async (patientId: string) => {
+    setSelectedPatientId(patientId);
+    const selectedPatient = patients.find(p => p.id === patientId);
+    if (selectedPatient) {
+      // Carica i dati del paziente selezionato
+      setPatientData(prev => ({
+        ...prev,
+        name: selectedPatient.name,
+        surname: selectedPatient.surname,
+        phone: selectedPatient.phone || "",
+        email: selectedPatient.email || ""
+      }));
+      
+      // Carica i dati di progresso
+      try {
+        const progressData = await loadProgressData(patientId);
+        setRealProgressData(progressData);
+        toast.success(`Paziente ${selectedPatient.name} ${selectedPatient.surname} caricato`);
+      } catch (error) {
+        console.error('Errore nel caricamento progressi:', error);
+        setRealProgressData([]);
+      }
+    }
+  };
 
   // Dati di esempio per il grafico dei progressi
   const progressData = [
@@ -360,17 +404,16 @@ const Index = () => {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="patient-select" className="text-sm font-medium text-gray-700">Seleziona un paziente esistente:</Label>
-                  <Select onValueChange={(value) => {
-                    // Qui caricheresti i dati del paziente selezionato
-                    toast.success(`Paziente selezionato: ${value}`);
-                  }}>
+                  <Select value={selectedPatientId} onValueChange={handlePatientSelect}>
                     <SelectTrigger className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500">
-                      <SelectValue placeholder="Scegli paziente..." />
+                      <SelectValue placeholder={patients.length === 0 ? "Nessun paziente salvato" : "Scegli paziente..."} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="mario-rossi">Mario Rossi</SelectItem>
-                      <SelectItem value="giulia-bianchi">Giulia Bianchi</SelectItem>
-                      <SelectItem value="luca-verdi">Luca Verdi</SelectItem>
+                      {patients.map((patient) => (
+                        <SelectItem key={patient.id} value={patient.id}>
+                          {patient.name} {patient.surname}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -801,7 +844,7 @@ const Index = () => {
             <div style={{width: '100%', height: '400px', marginBottom: '20px'}}>
               <h4>Evoluzione Misure Corporee</h4>
               <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={progressData}>
+                <LineChart data={realProgressData.length > 0 ? realProgressData : progressData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
@@ -817,7 +860,7 @@ const Index = () => {
             <div style={{width: '100%', height: '400px'}}>
               <h4>Evoluzione Composizione Corporea</h4>
               <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={progressData}>
+                <LineChart data={realProgressData.length > 0 ? realProgressData : progressData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
